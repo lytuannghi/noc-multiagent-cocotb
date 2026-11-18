@@ -1,0 +1,13 @@
+# ============================================================================
+# Git Ignore - NoC Multi-Agent Silicon Platform
+# ============================================================================
+
+# Simulation outputs & binary dumps
+*.vvp
+*.vcd
+*.log
+__pycache__/
+*.pyc
+
+# Local private student handbook & interview guide
+docs/GIAI_THICH_TOAN_DIEN_*.md

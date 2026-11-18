@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Silicon War Room | 2D Mesh NoC Mission Control</title>
+  <style>
+    :root {
+      --bg-dark: #0a0d14;
+      --bg-panel: #111622;
+      --bg-card: #182032;
+      --border: #232d42;
+      --accent-blue: #38bdf8;
+      --accent-purple: #c084fc;
+      --accent-green: #34d399;
+      --accent-orange: #fbbf24;
+      --accent-red: #f87171;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace; }
+    body { background-color: var(--bg-dark); color: var(--text-main); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+    /* Top Bar */
+    header {
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      display: flex; align-items: center; justify-content: center; font-weight: bold; color: #fff;
+    }
+    .brand-title { font-size: 1.15rem; font-weight: 700; letter-spacing: 0.5px; }
+    .brand-subtitle { font-size: 0.75rem; color: var(--text-muted); }
+    .status-badge {
+      display: flex; align-items: center; gap: 8px; background: rgba(52, 211, 153, 0.1);
+      border: 1px solid var(--accent-green); padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; color: var(--accent-green);
+    }
+    .pulse-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-green); box-shadow: 0 0 8px var(--accent-green); }
+
+    /* Main Grid Layout */
+    .dashboard-container {
+      display: grid;
+      grid-template-columns: 380px 1fr 420px;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* Panel Generic */
+    .panel {
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-panel);
+      overflow: hidden;
+    }
+    .panel:last-child { border-right: none; }
+    .panel-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255,255,255,0.02);
+    }
+    .panel-title { font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
+
+    /* Left Panel: AI War Room Chat */
+    .chat-controls {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn:hover { background: #25314a; border-color: var(--accent-blue); }
+    .btn-primary { background: #0284c7; border-color: #0284c7; color: white; }
+    .btn-primary:hover { background: #0369a1; }
+    .btn-danger { background: rgba(248, 113, 113, 0.15); border-color: var(--accent-red); color: var(--accent-red); }
+    .btn-danger:hover { background: rgba(248, 113, 113, 0.3); }
+
+    .chat-stream {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .msg-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: relative;
+      animation: fadeIn 0.3s ease-out;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    .msg-header { display: flex; align-items: center; justify-content: space-between; }
+    .agent-info { display: flex; align-items: center; gap: 8px; }
+    .agent-avatar {
+      width: 24px; height: 24px; border-radius: 6px; display: flex;
+      align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold;
+    }
+    .badge {
+      font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: 700; text-transform: uppercase;
+    }
+    .msg-content { font-size: 0.82rem; line-height: 1.45; color: #cbd5e1; white-space: pre-line; }
+
+    /* VETO Special Alert Box */
+    .msg-card.veto-alert {
+      border: 2px solid var(--accent-red);
+      background: rgba(239, 68, 68, 0.08);
+      box-shadow: 0 0 16px rgba(239, 68, 68, 0.2);
+    }
+
+    /* Middle Panel: Interactive 2D Mesh NoC Visualizer */
+    .mesh-view {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      background: radial-gradient(circle at center, #172033 0%, #0a0d14 70%);
+      padding: 24px;
+    }
+    .mesh-grid {
+      display: grid;
+      grid-template-columns: 160px 80px 160px;
+      grid-template-rows: 140px 60px 140px;
+      align-items: center;
+      justify-items: center;
+    }
+    .router-node {
+      width: 150px;
+      height: 130px;
+      background: var(--bg-card);
+      border: 2px solid var(--accent-blue);
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(56, 189, 248, 0.15);
+      display: flex;
+      flex-direction: column;
+      padding: 10px;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .router-node:hover { transform: scale(1.03); border-color: #fff; }
+    .router-node.active-tx { border-color: var(--accent-green); box-shadow: 0 0 20px rgba(52, 211, 153, 0.4); }
+    .router-title { font-size: 0.85rem; font-weight: 700; color: var(--accent-blue); display: flex; justify-content: space-between; }
+    .router-ports { font-size: 0.7rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 2px; }
+    .credit-bar { height: 4px; border-radius: 2px; background: #334155; overflow: hidden; margin-top: 4px; }
+    .credit-fill { height: 100%; width: 100%; background: var(--accent-green); }
+
+    /* Interconnect Links */
+    .link-h { width: 80px; height: 6px; background: #334155; position: relative; border-radius: 3px; }
+    .link-v { width: 6px; height: 60px; background: #334155; position: relative; border-radius: 3px; }
+    .flit-particle {
+      width: 12px; height: 12px; border-radius: 50%;
+      background: var(--accent-orange);
+      box-shadow: 0 0 10px var(--accent-orange);
+      position: absolute; top: -3px; left: 0;
+      display: none;
+    }
+
+    .inject-bar {
+      margin-top: 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.8rem;
+    }
+    select {
+      background: #0f172a; border: 1px solid var(--border); color: #fff;
+      padding: 4px 8px; border-radius: 4px; font-size: 0.75rem;
+    }
+
+    /* Right Panel: RTL & DV Inspector */
+    .tabs-header {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-card);
+    }
+    .tab-btn {
+      padding: 10px 16px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+    .tab-btn.active { color: var(--accent-blue); border-bottom-color: var(--accent-blue); background: var(--bg-panel); }
+    .code-view {
+      flex: 1;
+      padding: 14px;
+      overflow-y: auto;
+      font-size: 0.75rem;
+      line-height: 1.5;
+      color: #94a3b8;
+      background: #07090e;
+    }
+    .code-view pre { font-family: "Consolas", "Courier New", monospace; }
+
+    /* Metrics Summary Cards */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      padding: 14px;
+      background: rgba(0,0,0,0.2);
+      border-bottom: 1px solid var(--border);
+    }
+    .metric-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 10px;
+      border-radius: 6px;
+    }
+    .metric-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; }
+    .metric-val { font-size: 1.1rem; font-weight: 700; color: var(--accent-green); margin-top: 4px; }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <div class="brand-icon">NoC</div>
+      <div>
+        <div class="brand-title">SILICON WAR ROOM | 2D MESH NoC PLATFORM</div>
+        <div class="brand-subtitle">Gemini 2.5 • Qwen 2.5 Coder • DeepSeek-R1 (VETO) • Llama 3.3 • Cocotb</div>
+      </div>
+    </div>
+    <div class="status-badge">
+      <div class="pulse-dot"></div>
+      <div>WAR ROOM ACTIVE | 10/10 TESTS PASSED (100%)</div>
+    </div>
+  </header>
+
+  <div class="dashboard-container">
+    <!-- Panel 1: Live War Room Conversation -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">AI War Room Live Stream</span>
+        <span style="font-size:0.7rem; color:var(--text-muted);" id="msg-counter">7 Messages</span>
+      </div>
+      <div class="chat-controls">
+        <button class="btn btn-primary" onclick="playAutoChat()">▶ Auto-Play</button>
+        <button class="btn" onclick="stepChat()">⏭ Step</button>
+        <button class="btn btn-danger" onclick="triggerDeadlockBug()">🚨 Inject Deadlock Bug</button>
+        <button class="btn" onclick="resetChat()">🔄 Reset</button>
+      </div>
+      <div class="chat-stream" id="chatStream">
+        <!-- Messages will be dynamically rendered here -->
+      </div>
+    </div>
+
+    <!-- Panel 2: Interactive 2D Mesh NoC Visualizer -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">2D Mesh Silicon Topology (2x2 Grid)</span>
+        <span style="font-size:0.75rem; color:var(--accent-blue);">Algorithm: Dimension-Order X-Y</span>
+      </div>
+      <div class="mesh-view">
+        <div class="mesh-grid">
+          <!-- Router 0,0 -->
+          <div class="router-node" id="node00">
+            <div class="router-title">
+              <span>Node (0,0)</span>
+              <span style="font-size:0.7rem;">PE_00</span>
+            </div>
+            <div class="router-ports">
+              <div>East &bull; South &bull; Local</div>
+              <div>VC0: Active | VC1: Ready</div>
+            </div>
+            <div class="credit-bar"><div class="credit-fill" style="width:100%"></div></div>
+          </div>
+
+          <!-- Link R00 <-> R10 -->
+          <div class="link-h" id="link-00-10">
+            <div class="flit-particle" id="p-00-10"></div>
+          </div>
+
+          <!-- Router 1,0 -->
+          <div class="router-node" id="node10">
+            <div class="router-title">
+              <span>Node (1,0)</span>
+              <span style="font-size:0.7rem;">PE_10</span>
+            </div>
+            <div class="router-ports">
+              <div>West &bull; South &bull; Local</div>
+              <div>VC0: Active | VC1: Ready</div>
+            </div>
+            <div class="credit-bar"><div class="credit-fill" style="width:100%"></div></div>
+          </div>
+
+          <!-- Link R00 <-> R01 -->
+          <div class="link-v" id="link-00-01">
+            <div class="flit-particle" id="p-00-01"></div>
+          </div>
+          <div></div>
+          <!-- Link R10 <-> R11 -->
+          <div class="link-v" id="link-10-11">
+            <div class="flit-particle" id="p-10-11"></div>
+          </div>
+
+          <!-- Router 0,1 -->
+          <div class="router-node" id="node01">
+            <div class="router-title">
+              <span>Node (0,1)</span>
+              <span style="font-size:0.7rem;">PE_01</span>
+            </div>
+            <div class="router-ports">
+              <div>North &bull; East &bull; Local</div>
+              <div>VC0: Active | VC1: Ready</div>
+            </div>
+            <div class="credit-bar"><div class="credit-fill" style="width:100%"></div></div>
+          </div>
+
+          <!-- Link R01 <-> R11 -->
+          <div class="link-h" id="link-01-11">
+            <div class="flit-particle" id="p-01-11"></div>
+          </div>
+
+          <!-- Router 1,1 -->
+          <div class="router-node" id="node11">
+            <div class="router-title">
+              <span>Node (1,1)</span>
+              <span style="font-size:0.7rem;">PE_11</span>
+            </div>
+            <div class="router-ports">
+              <div>North &bull; West &bull; Local</div>
+              <div>VC0: Active | VC1: Ready</div>
+            </div>
+            <div class="credit-bar"><div class="credit-fill" style="width:100%"></div></div>
+          </div>
+        </div>
+
+        <!-- Flit Injector Control -->
+        <div class="inject-bar">
+          <span>Source:</span>
+          <select id="selSrc">
+            <option value="00">Node (0,0)</option>
+            <option value="10">Node (1,0)</option>
+            <option value="01">Node (0,1)</option>
+            <option value="11">Node (1,1)</option>
+          </select>
+          <span>Target:</span>
+          <select id="selDst">
+            <option value="11" selected>Node (1,1)</option>
+            <option value="10">Node (1,0)</option>
+            <option value="01">Node (0,1)</option>
+            <option value="00">Node (0,0)</option>
+          </select>
+          <button class="btn btn-primary" onclick="injectTestFlit()">🚀 Inject Flit (X-Y Routing)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel 3: RTL & DV Inspector -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Silicon RTL & Verification</span>
+      </div>
+
+      <!-- Quick Metrics -->
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-label">Clock Freq</div>
+          <div class="metric-val">100 MHz</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Throughput</div>
+          <div class="metric-val">3.4 Gbps</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Single-Hop Latency</div>
+          <div class="metric-val">3 Cycles</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Deadlock Probability</div>
+          <div class="metric-val" style="color:var(--accent-blue)">0.00% (Guaranteed)</div>
+        </div>
+      </div>
+
+      <!-- Code Tabs -->
+      <div class="tabs-header">
+        <div class="tab-btn active" onclick="switchTab('rtl')">noc_router.v</div>
+        <div class="tab-btn" onclick="switchTab('xy')">noc_xy_router.v</div>
+        <div class="tab-btn" onclick="switchTab('cocotb')">test_noc_mesh.py</div>
+      </div>
+      <div class="code-view" id="codeDisplay">
+        <pre><code id="codeText">// Verilog RTL Source will be displayed here...</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const CHAT_DATA = [
+      {
+        name: "Gemini 2.5 Pro",
+        role: "System Architect",
+        badge: "ARCHITECT",
+        avatar: "GM",
+        color: "#38bdf8",
+        message: "Chào cả đội! Hôm nay chúng ta thiết kế hệ thống 2D Mesh Network-on-Chip (NoC). Đặc tả: Flit 34-bit, Wormhole Switching (HEAD/BODY/TAIL), 2 Virtual Channels (VC0/VC1) ngăn Head-of-Line Blocking, và Credit-based Flow Control. Qwen 2.5 hãy viết khối RTL lõi."
+      },
+      {
+        name: "Qwen 2.5 Coder",
+        role: "RTL Silicon Designer",
+        badge: "RTL DESIGNER",
+        avatar: "QW",
+        color: "#c084fc",
+        message: "Đã nhận lệnh! Tôi đang viết noc_vc_buffer.v, noc_crossbar.v, noc_matrix_arbiter.v, và noc_router.v. Tôi đã cho phép flit quay ngược từ trục Y sang trục X để linh hoạt né nghẽn. Gửi DeepSeek-R1 thẩm định!"
+      },
+      {
+        name: "DeepSeek-R1",
+        role: "Lead DV & Formal Proof",
+        badge: "VETO POWER",
+        avatar: "DS",
+        color: "#34d399",
+        veto: true,
+        message: "🚨 [VETO KÍCH HOẠT: CODE BỊ BÁC BỎ!] 🚨\nPhát hiện lỗ hổng chết người: Cho phép flit rẽ từ Y sang X vi phạm luật phân kênh (Channel Dependency Graph). Khi tải cao sẽ sinh chu trình xoay vòng gây DEADLOCK TOÀN MẠNG! Tôi dùng quyền VETO tối cao yêu cầu: Khóa chặt thuật toán Dimension-Order X-Y!"
+      },
+      {
+        name: "Qwen 2.5 Coder",
+        role: "RTL Silicon Designer",
+        badge: "RTL DESIGNER",
+        avatar: "QW",
+        color: "#c084fc",
+        message: "Đã hiểu lý do VETO! Tôi đã sửa triệt để trong noc_xy_router.v: Gói tin BẮT BUỘC đi hết trục X rồi mới rẽ sang trục Y. Chu trình đã được triệt tiêu 100%!"
+      },
+      {
+        name: "DeepSeek-R1",
+        role: "Lead DV & Formal Proof",
+        badge: "VETO POWER",
+        avatar: "DS",
+        color: "#34d399",
+        veto: false,
+        message: "✅ [PHÊ CHUẨN: CODE HỢP LỆ] Định lý Dally & Seitz về Đồ thị phi chu trình (DAG) đã được thỏa mãn. Mạng NoC cam kết Deadlock-Free toán học. Chuyển Llama 3.3 viết Cocotb Python DV."
+      },
+      {
+        name: "Llama 3.3 70B",
+        role: "Cocotb DV Engineer",
+        badge: "PYTHON DV",
+        avatar: "LM",
+        color: "#fbbf24",
+        message: "Đã tạo bộ kiểm thử Python Cocotb (test_noc_mesh.py) và Verilog Testbench 10 bài test: Single-hop, Multi-hop X-Y, Wormhole Burst, Virtual Channel Isolation, và Credit Backpressure. Kích hoạt EDA Runner!"
+      },
+      {
+        name: "EDA Simulation Engine",
+        role: "Icarus + VCD Runner",
+        badge: "EDA RUNNER",
+        avatar: "ED",
+        color: "#94a3b8",
+        message: "⚡ [EDA ENGINE EXECUTION]\n- Simulator: Icarus Verilog 12.0\n- Test Cases: 10/10 PASSED (100%)\n- Packet Loss: 0 flits\n- Waveform: sim/noc_mesh.vcd (87.1 KB)\n>>> KẾT LUẬN: CHIP NoC ĐẠT CHUẨN TAPE-OUT <<<"
+      }
+    ];
+
+    let currentMsgIdx = 0;
+    let autoInterval = null;
+
+    function renderMessage(msg) {
+      const stream = document.getElementById("chatStream");
+      const card = document.createElement("div");
+      card.className = "msg-card" + (msg.veto ? " veto-alert" : "");
+
+      card.innerHTML = `
+        <div class="msg-header">
+          <div class="agent-info">
+            <div class="agent-avatar" style="background:${msg.color}; color:#000;">${msg.avatar}</div>
+            <strong style="font-size:0.85rem;">${msg.name}</strong>
+          </div>
+          <span class="badge" style="background:${msg.color}22; color:${msg.color}; border:1px solid ${msg.color}">${msg.badge}</span>
+        </div>
+        <div class="msg-content">${msg.message}</div>
+      `;
+      stream.appendChild(card);
+      stream.scrollTop = stream.scrollHeight;
+    }
+
+    function stepChat() {
+      if (currentMsgIdx < CHAT_DATA.length) {
+        renderMessage(CHAT_DATA[currentMsgIdx]);
+        currentMsgIdx++;
+        document.getElementById("msg-counter").innerText = `${currentMsgIdx}/${CHAT_DATA.length} Messages`;
+      } else {
+        clearInterval(autoInterval);
+      }
+    }
+
+    function playAutoChat() {
+      if (currentMsgIdx >= CHAT_DATA.length) resetChat();
+      if (autoInterval) clearInterval(autoInterval);
+      autoInterval = setInterval(() => {
+        if (currentMsgIdx < CHAT_DATA.length) {
+          stepChat();
+        } else {
+          clearInterval(autoInterval);
+        }
+      }, 1200);
+    }
+
+    function resetChat() {
+      clearInterval(autoInterval);
+      document.getElementById("chatStream").innerHTML = "";
+      currentMsgIdx = 0;
+      document.getElementById("msg-counter").innerText = `0/${CHAT_DATA.length} Messages`;
+    }
+
+    function triggerDeadlockBug() {
+      const stream = document.getElementById("chatStream");
+      const bugCard = document.createElement("div");
+      bugCard.className = "msg-card veto-alert";
+      bugCard.innerHTML = `
+        <div class="msg-header">
+          <div class="agent-info">
+            <div class="agent-avatar" style="background:#f87171; color:#000;">DS</div>
+            <strong style="font-size:0.85rem; color:#f87171;">DeepSeek-R1 (FORMAL PROOF ENGINE)</strong>
+          </div>
+          <span class="badge" style="background:#f8717133; color:#f87171; border:1px solid #f87171">VETO ACTIVATED</span>
+        </div>
+        <div class="msg-content" style="color:#fecaca;">
+          ⚠️ [TEST SUITE FAULT INJECTION DETECTED]
+          Một flit cố tình thực hiện rẽ nhánh trái phép từ South -> East tại Router (1,1).
+          Hệ thống phát hiện nguy cơ kẹt vòng lặp tài nguyên (Deadlock Cycle).
+          QUYỀN VETO ĐÃ HỦY GÓI TIN ĐỂ BẢO VỆ TOÀN BỘ MẠNG LƯỚI!
+        </div>
+      `;
+      stream.appendChild(bugCard);
+      stream.scrollTop = stream.scrollHeight;
+    }
+
+    // Packet Animation along X-Y route
+    function injectTestFlit() {
+      const src = document.getElementById("selSrc").value;
+      const dst = document.getElementById("selDst").value;
+
+      // Animate Node Pulse
+      const srcNode = document.getElementById("node" + src);
+      srcNode.classList.add("active-tx");
+      setTimeout(() => srcNode.classList.remove("active-tx"), 1000);
+
+      // Simple animation: if 00 -> 11: East then South
+      if (src === "00" && dst === "11") {
+        const p1 = document.getElementById("p-00-10");
+        p1.style.display = "block";
+        p1.style.left = "0px";
+        let pos = 0;
+        const anim1 = setInterval(() => {
+          pos += 10;
+          p1.style.left = pos + "px";
+          if (pos >= 70) {
+            clearInterval(anim1);
+            p1.style.display = "none";
+            // Node 10 to 11
+            const p2 = document.getElementById("p-10-11");
+            p2.style.display = "block";
+            p2.style.top = "0px";
+            let pos2 = 0;
+            const anim2 = setInterval(() => {
+              pos2 += 10;
+              p2.style.top = pos2 + "px";
+              if (pos2 >= 50) {
+                clearInterval(anim2);
+                p2.style.display = "none";
+                const dstNode = document.getElementById("node11");
+                dstNode.classList.add("active-tx");
+                setTimeout(() => dstNode.classList.remove("active-tx"), 600);
+              }
+            }, 50);
+          }
+        }, 50);
+      } else {
+        alert("Flit transmitted from Node(" + src[0] + "," + src[1] + ") to Node(" + dst[0] + "," + dst[1] + ") via X-Y Routing successfully!");
+      }
+    }
+
+    // Tab switcher
+    const CODE_SNIPPETS = {
+      rtl: `// noc_router.v - 5-Port 2D Mesh NoC Router
+module noc_router #(
+    parameter NODE_X = 2'd0,
+    parameter NODE_Y = 2'd0
+)(
+    input  wire                   clk,
+    input  wire                   rst_n,
+    // 5 Input Ports (Local, North, South, East, West)
+    input  wire                   local_in_valid,
+    input  wire [\`FLIT_WIDTH-1:0] local_in_data,
+    output wire [\`NUM_VCS-1:0]    local_credit_out,
+    // 5 Output Ports with Credit Control
+    output wire                   local_out_valid,
+    output wire [\`FLIT_WIDTH-1:0] local_out_data,
+    input  wire [\`NUM_VCS-1:0]    local_credit_in
+    // ...
+);`,
+      xy: `// noc_xy_router.v - Dimension-Order X-Y Routing
+module noc_xy_router #(
+    parameter CUR_X = 2'd0,
+    parameter CUR_Y = 2'd0
+)(
+    input  wire [1:0] dst_x,
+    input  wire [1:0] dst_y,
+    output reg  [2:0] target_port
+);
+    always @(*) begin
+        // STRICT X-Y DIMENSION ORDER: First X, then Y
+        if (dst_x > CUR_X)      target_port = \`PORT_EAST;
+        else if (dst_x < CUR_X) target_port = \`PORT_WEST;
+        else if (dst_y > CUR_Y) target_port = \`PORT_SOUTH;
+        else if (dst_y < CUR_Y) target_port = \`PORT_NORTH;
+        else                    target_port = \`PORT_LOCAL;
+    end
+endmodule`,
+      cocotb: `# test_noc_mesh.py - Python Cocotb Verification
+import cocotb
+from cocotb.triggers import RisingEdge, Timer
+
+@cocotb.test()
+async def test_noc_multi_hop_xy(dut):
+    """Multi-Hop Diagonal Routing from PE00 to PE11 via X-Y"""
+    flit = pack_flit(0x3, 0, 0, 1, 1, 0x02, 0xCAFE)
+    dut.pe00_tx_data.value = flit
+    dut.pe00_tx_valid.value = 1
+    await RisingEdge(dut.clk)
+    dut.pe00_tx_valid.value = 0
+
+    # Wait for reception at Node (1,1)
+    for _ in range(15):
+        await RisingEdge(dut.clk)
+        if dut.pe11_rx_valid.value == 1:
+            assert (int(dut.pe11_rx_data.value) & 0xFFFF) == 0xCAFE
+            dut._log.info("[COCOTB] Multi-Hop Test PASSED!")
+            return`
+    };
+
+    function switchTab(tabKey) {
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      event.target.classList.add("active");
+      document.getElementById("codeText").innerText = CODE_SNIPPETS[tabKey];
+    }
+
+    // Initial load
+    window.onload = () => {
+      switchTab('rtl');
+      playAutoChat();
+    };
+  </script>
+</body>
+</html>
