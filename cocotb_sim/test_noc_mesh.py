@@ -22,14 +22,14 @@ def pack_flit(flit_type, sx, sy, dx, dy, seq, payload):
 @cocotb.test()
 async def test_noc_point_to_point(dut):
     """Test 1: Single Flit Transmission from PE00 to PE10"""
-    clock = Clock(dut.clk, 10, units="ns")
+    clock = Clock(dut.clk, 10, unit="ns")
     cocotb.start_soon(clock.start())
 
     dut.rst_n.value = 0
     dut.pe00_tx_valid.value = 0
     dut.pe00_rx_credit.value = 3
     dut.pe10_rx_credit.value = 3
-    await Timer(30, units="ns")
+    await Timer(30, unit="ns")
     dut.rst_n.value = 1
     await RisingEdge(dut.clk)
 
@@ -55,11 +55,11 @@ async def test_noc_point_to_point(dut):
 @cocotb.test()
 async def test_noc_multi_hop_xy(dut):
     """Test 2: Multi-Hop Diagonal Routing from PE00 to PE11 via X-Y"""
-    clock = Clock(dut.clk, 10, units="ns")
+    clock = Clock(dut.clk, 10, unit="ns")
     cocotb.start_soon(clock.start())
 
     dut.rst_n.value = 0
-    await Timer(20, units="ns")
+    await Timer(20, unit="ns")
     dut.rst_n.value = 1
     await RisingEdge(dut.clk)
 

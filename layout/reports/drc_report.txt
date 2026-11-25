@@ -1,0 +1,28 @@
+====================================================================================
+GEOMETRIC GDSII DESIGN RULE CHECK (DRC) VERIFICATION REPORT
+Technology      : SkyWater 130nm
+Top Cell        : noc_mesh_2x2
+GDSII File      : layout\gds\noc_mesh_2x2.gds
+GDSII Size      : 182,338 bytes | ENDLIB=True
+Die Bounding Box: (0.00, 0.00) um to (420.00, 420.00) um [420.00 um x 420.00 um]
+Checker Engine  : Python Geometric GDSII Sweep-Line DRC Verifier (Reference Deck)
+====================================================================================
+LAYER-BY-LAYER GEOMETRIC CHECKS:
+  L64  (NWELL   ): polys=     4, density=60.25%, width_err=0, space_err=0, overlap_err=0, oob_err=0 -> PASSED
+  L65  (DIFF    ): polys=   896, density= 0.61%, width_err=0, space_err=0, overlap_err=0, oob_err=0 -> PASSED
+  L66  (POLY    ): polys=   896, density= 0.23%, width_err=0, space_err=0, overlap_err=0, oob_err=0 -> PASSED
+  L67  (CONTACT ): polys=   896, density= 0.02%, width_err=0, space_err=0, overlap_err=0, oob_err=0 -> PASSED
+  L68  (METAL1  ): polys=    64, density= 2.35%, width_err=0, space_err=0, overlap_err=0, oob_err=0 -> PASSED
+  L69  (VIA1    ): polys=    16, density= 0.00%, width_err=0, space_err=0, overlap_err=0, oob_err=0 -> PASSED
+  L70  (METAL2  ): polys=     8, density= 0.03%, width_err=0, space_err=0, overlap_err=0, oob_err=0 -> PASSED
+  L71  (VIA2    ): polys=    16, density= 0.00%, width_err=0, space_err=0, overlap_err=0, oob_err=0 -> PASSED
+  L72  (METAL3  ): polys=    24, density= 0.86%, width_err=0, space_err=0, overlap_err=0, oob_err=0 -> PASSED
+  L74  (METAL4  ): polys=     4, density= 2.82%, width_err=0, space_err=0, overlap_err=0, oob_err=0 -> PASSED
+  L75  (VIA4    ): polys=     4, density= 0.02%, width_err=0, space_err=0, overlap_err=0, oob_err=0 -> PASSED
+  L76  (METAL5  ): polys=     2, density= 2.06%, width_err=0, space_err=0, overlap_err=0, oob_err=0 -> PASSED
+  L108 (PAD     ): polys=    16, density= 1.31%, width_err=0, space_err=0, overlap_err=0, oob_err=0 -> PASSED
+  L235 (DIEAREA ): polys=     1, density=100.00%, width_err=0, space_err=0, overlap_err=0, oob_err=0 -> PASSED
+------------------------------------------------------------------------------------
+TOTAL GEOMETRIC DRC VIOLATIONS: 0
+DRC STATUS: CLEAN (0 VIOLATIONS)
+====================================================================================

@@ -114,13 +114,19 @@ module tb_noc_mesh_2x2;
         end
     endfunction
 
-    // Continuous Monitoring of Receivers
+    // Continuous Monitoring of Receivers (latch payload on valid pulse)
+    reg [15:0] last_rx_00, last_rx_10, last_rx_01, last_rx_11;
     always @(posedge clk) begin
-        if (rst_n) begin
-            if (pe00_rx_valid) rx_count_00 <= rx_count_00 + 1;
-            if (pe10_rx_valid) rx_count_10 <= rx_count_10 + 1;
-            if (pe01_rx_valid) rx_count_01 <= rx_count_01 + 1;
-            if (pe11_rx_valid) rx_count_11 <= rx_count_11 + 1;
+        if (!rst_n) begin
+            last_rx_00 <= 16'd0;
+            last_rx_10 <= 16'd0;
+            last_rx_01 <= 16'd0;
+            last_rx_11 <= 16'd0;
+        end else begin
+            if (pe00_rx_valid) begin rx_count_00 <= rx_count_00 + 1; last_rx_00 <= pe00_rx_data[15:0]; end
+            if (pe10_rx_valid) begin rx_count_10 <= rx_count_10 + 1; last_rx_10 <= pe10_rx_data[15:0]; end
+            if (pe01_rx_valid) begin rx_count_01 <= rx_count_01 + 1; last_rx_01 <= pe01_rx_data[15:0]; end
+            if (pe11_rx_valid) begin rx_count_11 <= rx_count_11 + 1; last_rx_11 <= pe11_rx_data[15:0]; end
         end
     end
 
@@ -167,11 +173,11 @@ module tb_noc_mesh_2x2;
 
         // Wait for arrival at PE10
         repeat (10) @(posedge clk);
-        if (rx_count_10 >= 1) begin
-            $display("  -> SUCCESS: Flit delivered to PE(1,0). Payload: 0x%04X", pe10_rx_data[15:0]);
+        if (rx_count_10 >= 1 && last_rx_10 == 16'hA001) begin
+            $display("  -> SUCCESS: Flit delivered to PE(1,0). Payload: 0x%04X", last_rx_10);
             pass_count = pass_count + 1;
         end else begin
-            $display("  -> FAILED: Flit not received at PE(1,0)!");
+            $display("  -> FAILED: Flit not received at PE(1,0)! payload=0x%04X", last_rx_10);
             fail_count = fail_count + 1;
         end
 
@@ -188,11 +194,11 @@ module tb_noc_mesh_2x2;
         pe00_tx_valid <= 1'b0;
 
         repeat (10) @(posedge clk);
-        if (rx_count_01 >= 1) begin
-            $display("  -> SUCCESS: Flit delivered to PE(0,1). Payload: 0x%04X", pe01_rx_data[15:0]);
+        if (rx_count_01 >= 1 && last_rx_01 == 16'hB002) begin
+            $display("  -> SUCCESS: Flit delivered to PE(0,1). Payload: 0x%04X", last_rx_01);
             pass_count = pass_count + 1;
         end else begin
-            $display("  -> FAILED: Flit not received at PE(0,1)!");
+            $display("  -> FAILED: Flit not received at PE(0,1)! payload=0x%04X", last_rx_01);
             fail_count = fail_count + 1;
         end
 
@@ -209,11 +215,11 @@ module tb_noc_mesh_2x2;
         pe00_tx_valid <= 1'b0;
 
         repeat (15) @(posedge clk);
-        if (rx_count_11 >= 1) begin
-            $display("  -> SUCCESS: Multi-hop Flit arrived at PE(1,1). Payload: 0x%04X", pe11_rx_data[15:0]);
+        if (rx_count_11 >= 1 && last_rx_11 == 16'hC003) begin
+            $display("  -> SUCCESS: Multi-hop Flit arrived at PE(1,1). Payload: 0x%04X", last_rx_11);
             pass_count = pass_count + 1;
         end else begin
-            $display("  -> FAILED: Multi-hop flit lost!");
+            $display("  -> FAILED: Multi-hop flit lost! payload=0x%04X", last_rx_11);
             fail_count = fail_count + 1;
         end
 
@@ -230,11 +236,11 @@ module tb_noc_mesh_2x2;
         pe11_tx_valid <= 1'b0;
 
         repeat (15) @(posedge clk);
-        if (rx_count_00 >= 1) begin
-            $display("  -> SUCCESS: Reverse Flit arrived at PE(0,0). Payload: 0x%04X", pe00_rx_data[15:0]);
+        if (rx_count_00 >= 1 && last_rx_00 == 16'hD004) begin
+            $display("  -> SUCCESS: Reverse Flit arrived at PE(0,0). Payload: 0x%04X", last_rx_00);
             pass_count = pass_count + 1;
         end else begin
-            $display("  -> FAILED: Reverse flit lost!");
+            $display("  -> FAILED: Reverse flit lost! payload=0x%04X", last_rx_00);
             fail_count = fail_count + 1;
         end
 
@@ -251,8 +257,13 @@ module tb_noc_mesh_2x2;
         pe10_tx_valid <= 1'b0;
 
         repeat (15) @(posedge clk);
-        $display("  -> SUCCESS: Virtual Channel 1 traffic handled with zero HoL blocking.");
-        pass_count = pass_count + 1;
+        if (rx_count_01 >= 2 && last_rx_01 == 16'hE005) begin
+            $display("  -> SUCCESS: Virtual Channel 1 traffic delivered (Payload: 0x%04X).", last_rx_01);
+            pass_count = pass_count + 1;
+        end else begin
+            $display("  -> FAILED: Virtual Channel 1 payload mismatch (0x%04X)!", last_rx_01);
+            fail_count = fail_count + 1;
+        end
 
         // --------------------------------------------------------------------
         // Test 6: Wormhole Packet Burst (HEAD -> BODY -> TAIL)
@@ -273,8 +284,13 @@ module tb_noc_mesh_2x2;
         pe01_tx_valid <= 1'b0;
 
         repeat (20) @(posedge clk);
-        $display("  -> SUCCESS: Wormhole packet traversed mesh preserving flit sequence.");
-        pass_count = pass_count + 1;
+        if (rx_count_10 >= 4 && last_rx_10 == 16'h3333) begin
+            $display("  -> SUCCESS: Wormhole 3-flit burst received cleanly (tail=0x%04X).", last_rx_10);
+            pass_count = pass_count + 1;
+        end else begin
+            $display("  -> FAILED: Wormhole burst incomplete (rx_count_10=%0d, last=0x%04X).", rx_count_10, last_rx_10);
+            fail_count = fail_count + 1;
+        end
 
         // --------------------------------------------------------------------
         // Test 7: Credit-Based Flow Control Verification
@@ -303,29 +319,40 @@ module tb_noc_mesh_2x2;
         pe00_tx_valid <= 0; pe10_tx_valid <= 0; pe01_tx_valid <= 0; pe11_tx_valid <= 0;
 
         repeat (25) @(posedge clk);
-        $display("  -> SUCCESS: 4 simultaneous packets arbitrated with zero collisions.");
-        pass_count = pass_count + 1;
+        if (last_rx_11 == 16'h8001 && last_rx_01 == 16'h8002 && last_rx_10 == 16'h8003 && last_rx_00 == 16'h8004) begin
+            $display("  -> SUCCESS: 4 simultaneous packets arbitrated and delivered cleanly.");
+            pass_count = pass_count + 1;
+        end else begin
+            $display("  -> FAILED: Cross-traffic payload mismatch (%04X, %04X, %04X, %04X)!", last_rx_11, last_rx_01, last_rx_10, last_rx_00);
+            fail_count = fail_count + 1;
+        end
 
         // --------------------------------------------------------------------
-        // Test 9: Deadlock-Freedom Formal Audit (Enforced by DeepSeek-R1)
+        // Test 9: Deadlock-Freedom Total Flit Conservation Audit
         // --------------------------------------------------------------------
         test_id = 9;
         $display("\n[TEST 9] Deadlock & Livelock Resistance Audit...");
         $display("  -> Total Flits Received: PE00=%0d, PE10=%0d, PE01=%0d, PE11=%0d", rx_count_00, rx_count_10, rx_count_01, rx_count_11);
-        $display("  -> Cycle dependency graph check: STRICT X-Y DIMENSION ORDER MAINTAINED.");
-        $display("  -> SUCCESS: Mathematical guarantee of Zero Deadlock.");
-        pass_count = pass_count + 1;
+        if ((rx_count_00 + rx_count_10 + rx_count_01 + rx_count_11) == 12) begin
+            $display("  -> SUCCESS: All 12 injected flits conserved with zero deadlock/loss.");
+            pass_count = pass_count + 1;
+        end else begin
+            $display("  -> FAILED: Flit conservation mismatch (total=%0d, expected 12).", rx_count_00 + rx_count_10 + rx_count_01 + rx_count_11);
+            fail_count = fail_count + 1;
+        end
 
         // --------------------------------------------------------------------
-        // Test 10: Throughput & Latency Benchmark
+        // Test 10: Credit Conservation & Steady-State Return Check
         // --------------------------------------------------------------------
         test_id = 10;
-        $display("\n[TEST 10] Throughput and Latency Performance Evaluation...");
-        $display("  -> Single-hop Latency : 3 clock cycles (30 ns)");
-        $display("  -> Multi-hop Latency  : 6 clock cycles (60 ns)");
-        $display("  -> Network Throughput : 3.4 Gbps per bi-directional link @ 100MHz");
-        $display("  -> SUCCESS: Performance meets High-Performance Silicon criteria.");
-        pass_count = pass_count + 1;
+        $display("\n[TEST 10] Steady-State Credit Restoration Check...");
+        if (u_mesh.u_router_00.credit_cnt_east_vc0 == 4 && u_mesh.u_router_00.credit_cnt_south_vc0 == 4) begin
+            $display("  -> SUCCESS: All downstream link credits restored cleanly (4/4 free).");
+            pass_count = pass_count + 1;
+        end else begin
+            $display("  -> FAILED: Credits leaked (east=%0d, south=%0d).", u_mesh.u_router_00.credit_cnt_east_vc0, u_mesh.u_router_00.credit_cnt_south_vc0);
+            fail_count = fail_count + 1;
+        end
 
         #50;
         $display("\n==================================================================");

@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 // ============================================================================
 // File: noc_crossbar.v
 // Module: noc_crossbar

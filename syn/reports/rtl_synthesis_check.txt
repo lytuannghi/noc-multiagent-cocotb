@@ -1,0 +1,24 @@
+================================================================================
+RTL SYNTHESIS READINESS & CONSTRAINT REPORT: noc-multiagent-cocotb
+Method : Static Verilog/SV Structural Parser + SDC Constraint Audit
+Note   : Foundry Gate-Level Netlist & STA require PDK Liberty (.lib) + Synopsys/OpenROAD
+================================================================================
+RTL Source Files Inspected : 6
+Code Lines (Non-Comment)   : 686
+Sequential Blocks          : 8
+Combinational Blocks       : 8
+Declared reg/logic Signals : 21
+
+MODULE BREAKDOWN:
+  rtl\noc_crossbar.v                            | modules=noc_crossbar                 | loc=  82 | seq= 0 | comb= 5
+  rtl\noc_matrix_arbiter.v                      | modules=noc_matrix_arbiter           | loc=  73 | seq= 1 | comb= 1
+  rtl\noc_mesh_2x2.v                            | modules=noc_mesh_2x2                 | loc= 115 | seq= 0 | comb= 0
+  rtl\noc_router.v                              | modules=noc_router                   | loc= 308 | seq= 5 | comb= 1
+  rtl\noc_vc_buffer.v                           | modules=noc_vc_buffer                | loc=  84 | seq= 2 | comb= 0
+  rtl\noc_xy_router.v                           | modules=noc_xy_router                | loc=  24 | seq= 0 | comb= 1
+
+SDC CLOCK CONSTRAINTS:
+  noc_mesh_2x2.sdc: port=clk | period=10.00 ns | target=100.00 MHz
+
+ARITHMETIC DIVISION/MODULO CHECK: CLEAN (0 combinational / or % operators)
+================================================================================

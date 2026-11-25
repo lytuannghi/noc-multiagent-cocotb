@@ -66,7 +66,7 @@ The hardware IP is architected, implemented, formally audited, verified, and ben
 
 ---
 
-## 🌐 Interactive Web War Room Dashboard
+## Interactive Web War Room Dashboard
 The project includes a standalone **Silicon Mission Control Web Dashboard** located at `web/index.html`.
 
 ### Features:
@@ -108,8 +108,11 @@ noc-multiagent-cocotb/
 ├── cocotb_sim/              # Cocotb & Python DV Suite
 │   ├── test_noc_mesh.py     # Python Cocotb coroutine testbenches
 │   └── vcd_analyzer.py      # PyVCD waveform parser and latency profiler
-├── docs/                    # Architecture Documentation & Transcripts
+├── docs/                    # Architecture Documentation & Schematics
+│   ├── schematics/          # Vector SVG module schematics (xy_router, router_top)
 │   └── war_room_transcript.md # Verbatim multi-agent design log
+├── syn/                     # Synthesis SDC constraints, TCL script & RTL analyzer
+├── layout/                  # SkyWater 130nm GDSII stream + sweep-line DRC verifier
 ├── rtl/                     # Synthesizable Verilog-2005 RTL
 │   ├── noc_pkg.vh           # Parameters, flit encoding, routing constants
 │   ├── noc_vc_buffer.v      # Dual Virtual Channel FIFO with credit out
@@ -136,9 +139,11 @@ noc-multiagent-cocotb/
 python agents/war_room.py
 ```
 
-### 2. Run the Full Silicon Simulation Suite
+### 2. Run the Full Silicon Simulation, Cocotb, Synthesis Audit & DRC Suite
 ```bash
 python sim/run_sim.py
+python syn/analyze_rtl.py
+python layout/scripts/verify_gds_drc.py layout/gds/noc_mesh_2x2.gds --top noc_mesh_2x2
 ```
 
 ### 3. Parse Waveform & Profile Latency

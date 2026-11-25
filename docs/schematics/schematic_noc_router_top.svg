@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 680" width="100%" height="100%" style="background:#0c1017; font-family: 'Consolas', monospace;">
+  <defs>
+    <filter id="glow-b" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <rect x="15" y="15" width="970" height="650" rx="12" fill="#111622" stroke="#232d42" stroke-width="2"/>
+  <text x="35" y="48" fill="#38bdf8" font-size="18" font-weight="bold">TOP-LEVEL STRUCTURAL SCHEMATIC: noc_router (5-Port Router Block)</text>
+  <text x="35" y="70" fill="#94a3b8" font-size="12">5 Virtual Channel Buffers &bull; 5 X-Y Routing Units &bull; 5 Matrix Arbiters &bull; 5x5 Non-Blocking Crossbar</text>
+
+  <!-- Left: 5 Input Port VC Buffers -->
+  <g transform="translate(40, 110)">
+    <!-- Local Buffer -->
+    <rect x="0" y="0" width="170" height="85" rx="6" fill="#182032" stroke="#38bdf8" stroke-width="1.5"/>
+    <text x="15" y="25" fill="#38bdf8" font-weight="bold" font-size="12">PORT_LOCAL IN</text>
+    <text x="15" y="45" fill="#cbd5e1" font-size="10">VC0 &amp; VC1 Buffers (4-deep)</text>
+    <text x="15" y="65" fill="#34d399" font-size="10">Credit Out &bull; Flit [33:0]</text>
+
+    <!-- North Buffer -->
+    <rect x="0" y="105" width="170" height="85" rx="6" fill="#182032" stroke="#38bdf8" stroke-width="1.5"/>
+    <text x="15" y="130" fill="#38bdf8" font-weight="bold" font-size="12">PORT_NORTH IN</text>
+    <text x="15" y="150" fill="#cbd5e1" font-size="10">VC0 &amp; VC1 Buffers (4-deep)</text>
+    <text x="15" y="170" fill="#34d399" font-size="10">Credit Out &bull; Flit [33:0]</text>
+
+    <!-- South Buffer -->
+    <rect x="0" y="210" width="170" height="85" rx="6" fill="#182032" stroke="#38bdf8" stroke-width="1.5"/>
+    <text x="15" y="235" fill="#38bdf8" font-weight="bold" font-size="12">PORT_SOUTH IN</text>
+    <text x="15" y="255" fill="#cbd5e1" font-size="10">VC0 &amp; VC1 Buffers (4-deep)</text>
+    <text x="15" y="275" fill="#34d399" font-size="10">Credit Out &bull; Flit [33:0]</text>
+
+    <!-- East Buffer -->
+    <rect x="0" y="315" width="170" height="85" rx="6" fill="#182032" stroke="#38bdf8" stroke-width="1.5"/>
+    <text x="15" y="340" fill="#38bdf8" font-weight="bold" font-size="12">PORT_EAST IN</text>
+    <text x="15" y="360" fill="#cbd5e1" font-size="10">VC0 &amp; VC1 Buffers (4-deep)</text>
+    <text x="15" y="380" fill="#34d399" font-size="10">Credit Out &bull; Flit [33:0]</text>
+
+    <!-- West Buffer -->
+    <rect x="0" y="420" width="170" height="85" rx="6" fill="#182032" stroke="#38bdf8" stroke-width="1.5"/>
+    <text x="15" y="445" fill="#38bdf8" font-weight="bold" font-size="12">PORT_WEST IN</text>
+    <text x="15" y="465" fill="#cbd5e1" font-size="10">VC0 &amp; VC1 Buffers (4-deep)</text>
+    <text x="15" y="485" fill="#34d399" font-size="10">Credit Out &bull; Flit [33:0]</text>
+  </g>
+
+  <!-- Middle Left: 5 Routing Logic Units -->
+  <g transform="translate(260, 110)">
+    <rect x="0" y="0" width="130" height="505" rx="8" fill="#1e293b" stroke="#a855f7" stroke-width="2"/>
+    <text x="65" y="35" fill="#a855f7" font-weight="bold" font-size="13" text-anchor="middle">5x ROUTERS</text>
+    <text x="65" y="55" fill="#cbd5e1" font-size="10" text-anchor="middle">(noc_xy_router)</text>
+    
+    <text x="65" y="120" fill="#94a3b8" font-size="11" text-anchor="middle">Local Route</text>
+    <line x1="15" y1="135" x2="115" y2="135" stroke="#334155"/>
+    <text x="65" y="200" fill="#94a3b8" font-size="11" text-anchor="middle">North Route</text>
+    <line x1="15" y1="215" x2="115" y2="215" stroke="#334155"/>
+    <text x="65" y="280" fill="#94a3b8" font-size="11" text-anchor="middle">South Route</text>
+    <line x1="15" y1="295" x2="115" y2="295" stroke="#334155"/>
+    <text x="65" y="360" fill="#94a3b8" font-size="11" text-anchor="middle">East Route</text>
+    <line x1="15" y1="375" x2="115" y2="375" stroke="#334155"/>
+    <text x="65" y="440" fill="#94a3b8" font-size="11" text-anchor="middle">West Route</text>
+  </g>
+
+  <!-- Center: 5x Matrix Arbiters -->
+  <g transform="translate(440, 110)">
+    <rect x="0" y="0" width="140" height="505" rx="8" fill="#1e293b" stroke="#f59e0b" stroke-width="2"/>
+    <text x="70" y="35" fill="#f59e0b" font-weight="bold" font-size="13" text-anchor="middle">5x ARBITERS</text>
+    <text x="70" y="55" fill="#cbd5e1" font-size="10" text-anchor="middle">(Matrix Arbiter)</text>
+
+    <text x="70" y="120" fill="#94a3b8" font-size="11" text-anchor="middle">Arb Local</text>
+    <line x1="15" y1="135" x2="125" y2="135" stroke="#334155"/>
+    <text x="70" y="200" fill="#94a3b8" font-size="11" text-anchor="middle">Arb North</text>
+    <line x1="15" y1="215" x2="125" y2="215" stroke="#334155"/>
+    <text x="70" y="280" fill="#94a3b8" font-size="11" text-anchor="middle">Arb South</text>
+    <line x1="15" y1="295" x2="125" y2="295" stroke="#334155"/>
+    <text x="70" y="360" fill="#94a3b8" font-size="11" text-anchor="middle">Arb East</text>
+    <line x1="15" y1="375" x2="125" y2="375" stroke="#334155"/>
+    <text x="70" y="440" fill="#94a3b8" font-size="11" text-anchor="middle">Arb West</text>
+  </g>
+
+  <!-- Center Right: 5x5 Non-blocking Crossbar -->
+  <g transform="translate(630, 110)">
+    <rect x="0" y="0" width="130" height="505" rx="8" fill="#0f172a" stroke="#10b981" stroke-width="2"/>
+    <text x="65" y="35" fill="#10b981" font-weight="bold" font-size="13" text-anchor="middle">5x5 CROSSBAR</text>
+    <text x="65" y="55" fill="#cbd5e1" font-size="10" text-anchor="middle">(noc_crossbar)</text>
+
+    <line x1="20" y1="100" x2="110" y2="100" stroke="#38bdf8" stroke-width="2"/>
+    <line x1="20" y1="180" x2="110" y2="180" stroke="#38bdf8" stroke-width="2"/>
+    <line x1="20" y1="260" x2="110" y2="260" stroke="#38bdf8" stroke-width="2"/>
+    <line x1="20" y1="340" x2="110" y2="340" stroke="#38bdf8" stroke-width="2"/>
+    <line x1="20" y1="420" x2="110" y2="420" stroke="#38bdf8" stroke-width="2"/>
+
+    <text x="65" y="480" fill="#34d399" font-size="11" text-anchor="middle">Non-Blocking</text>
+  </g>
+
+  <!-- Right: 5 Output Ports -->
+  <g transform="translate(810, 110)">
+    <rect x="0" y="0" width="150" height="85" rx="6" fill="#182032" stroke="#10b981" stroke-width="1.5"/>
+    <text x="15" y="35" fill="#34d399" font-weight="bold" font-size="12">LOCAL OUT</text>
+    <text x="15" y="60" fill="#cbd5e1" font-size="10">Flit [33:0] &bull; Valid</text>
+
+    <rect x="0" y="105" width="150" height="85" rx="6" fill="#182032" stroke="#10b981" stroke-width="1.5"/>
+    <text x="15" y="140" fill="#34d399" font-weight="bold" font-size="12">NORTH OUT</text>
+    <text x="15" y="165" fill="#cbd5e1" font-size="10">Flit [33:0] &bull; Valid</text>
+
+    <rect x="0" y="210" width="150" height="85" rx="6" fill="#182032" stroke="#10b981" stroke-width="1.5"/>
+    <text x="15" y="245" fill="#34d399" font-weight="bold" font-size="12">SOUTH OUT</text>
+    <text x="15" y="270" fill="#cbd5e1" font-size="10">Flit [33:0] &bull; Valid</text>
+
+    <rect x="0" y="315" width="150" height="85" rx="6" fill="#182032" stroke="#10b981" stroke-width="1.5"/>
+    <text x="15" y="350" fill="#34d399" font-weight="bold" font-size="12">EAST OUT</text>
+    <text x="15" y="375" fill="#cbd5e1" font-size="10">Flit [33:0] &bull; Valid</text>
+
+    <rect x="0" y="420" width="150" height="85" rx="6" fill="#182032" stroke="#10b981" stroke-width="1.5"/>
+    <text x="15" y="455" fill="#34d399" font-weight="bold" font-size="12">WEST OUT</text>
+    <text x="15" y="480" fill="#cbd5e1" font-size="10">Flit [33:0] &bull; Valid</text>
+  </g>
+
+  <!-- Bus Interconnections -->
+  <line x1="210" y1="150" x2="260" y2="150" stroke="#38bdf8" stroke-width="2"/>
+  <line x1="390" y1="200" x2="440" y2="200" stroke="#a855f7" stroke-width="2"/>
+  <line x1="580" y1="250" x2="630" y2="250" stroke="#f59e0b" stroke-width="2"/>
+  <line x1="760" y1="150" x2="810" y2="150" stroke="#10b981" stroke-width="2"/>
+  <line x1="760" y1="250" x2="810" y2="250" stroke="#10b981" stroke-width="2"/>
+  <line x1="760" y1="350" x2="810" y2="350" stroke="#10b981" stroke-width="2"/>
+  <line x1="760" y1="450" x2="810" y2="450" stroke="#10b981" stroke-width="2"/>
+
+  <!-- Footer note -->
+  <rect x="40" y="625" width="920" height="25" rx="4" fill="#1e293b"/>
+  <text x="60" y="642" fill="#94a3b8" font-size="11">&bull; Total Gate Count: ~4,200 Gates (Router Cell) &bull; Maximum Frequency: 1.25 GHz (SkyWater 130nm) &bull; Throughput: 3.4 Gbps/port</text>
+</svg>

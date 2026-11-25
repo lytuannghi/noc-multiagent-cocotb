@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 // ============================================================================
 // File: noc_matrix_arbiter.v
 // Module: noc_matrix_arbiter
