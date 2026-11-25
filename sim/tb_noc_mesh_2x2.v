@@ -134,7 +134,7 @@ module tb_noc_mesh_2x2;
     // Main Test Stimulus
     // ========================================================================
     initial begin
-        $dumpfile("noc_mesh.vcd");
+        $dumpfile("sim/noc_mesh.vcd");
         $dumpvars(0, tb_noc_mesh_2x2);
 
         // Initialization
